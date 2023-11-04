@@ -1,160 +1,297 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+import hashlib
+import re
+import bcrypt
+import getpass
+import datetime
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+from cryptography import x509
+from cryptography.x509.oid import NameOID
 
-# C extensions
-*.so
+file1 = open(r"C:\python\enregist.txt", "a")
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+while True:
+    email = input("donner votre email: ")
+    if re.fullmatch(regex, email):
+        print("email valide!")
+        break
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+while True:
+    def verifier_mot_de_passe(mot_de_passe):
+        if len(mot_de_passe) != 8:
+            return False
+        if not re.search(r'[A-Z]', mot_de_passe):
+            return False
+        if not re.search(r'[a-z]', mot_de_passe):
+            return False
+        if not re.search(r'\d', mot_de_passe):
+            return False
+        if not re.search(r'[!@#$%^&*()_+{}":;<>,.?~\\-]', mot_de_passe):
+            return False
+        return True
+    
+    mot_de_passe_utilisateur = getpass.getpass("Donnez votre mot de passe: ")
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+    if verifier_mot_de_passe(mot_de_passe_utilisateur):
+        print("Mot de passe valide.")
+        break
+    else:
+        print("Mot de passe invalide. Assurez-vous qu'il comporte au moins 1 majuscule, 1 minuscule, 1 chiffre, 1 caractère spécial, et a une longueur de 8 caractères.")
 
-# Translations
-*.mo
-*.pot
+file1.write(email)
+file1.write("---")
+file1.write(mot_de_passe_utilisateur)
+file1.write("\n")
+file1.close()
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+print("votre données est enregistré sur 'enregist.txt' file.")
 
-# Flask stuff:
-instance/
-.webassets-cache
+print("Login!")
+log = input("email: ")
+pwd = input("password: ")
+compare = log + "---" + pwd
+file1 = open(r"C:\python\enregist.txt", "r")
+for logins in file1:
+    if compare == logins.strip():
+        print("introuvable")
 
-# Scrapy stuff:
-.scrapy
+        while True:
+            print("A- Donnez un mot à hacher (en mode invisible)")
+            print("B- Chiffrement (RSA)")
+            print("C- Certificat (RSA)")
+            print("D- Quitter")
 
-# Sphinx documentation
-docs/_build/
+            choice = input("Choice : ")
 
-# PyBuilder
-.pybuilder/
-target/
+            if choice == 'A':
+                text = getpass.getpass("Donnez un mot à hacher: ")
+                print("a- Haché le mot par sha256")
+                print("b- Haché le mot en générant un salt (bcrypt)")
+                print("c- Attaquer par dictionnaire le mot inséré")
+                print("d- Revenir au menu principal")
 
-# Jupyter Notebook
-.ipynb_checkpoints
+                while True:
+                    choice = input("Choice : ")
+                    if choice == 'a':
+                        hashed_text =hashlib.sha256(text.encode()).hexdigest()
+                        print(hashed_text)
+                    elif choice == 'b':
+                        salt = bcrypt.gensalt()
+                        hashed = bcrypt.hashpw(text.encode(), salt)
+                        print("Salt:", salt)
+                        print("Hashed:", hashed)
+                        
+                    elif choice == 'c':
+                        dictionary = ["mot1", "mot2", "mot3", "mot4", "mot5"]
+                        print("Attaquer par dictionnaire")
+                        for word in dictionary:
+                         hashed_word = hashlib.sha256(word.encode()).hexdigest()
+                         if hashed_word == hashed_text:
+                             print(f"Mot trouvé dans le dictionnaire : {word}")
+                             break
+                         
+                         else:
+                              print("Aucun mot du dictionnaire ne correspond.")
+                              break
+                        
+                    elif choice == 'd':
+                        break
+                        
+                    
+            elif choice == 'B':
+                print("Chiffrement (RSA)")
+                print("a- Générer les paires de clés dans un fichier")
+                print("b- Chiffrer un message de votre choix par RSA")
+                print("c- Déchiffrer le message (b) ")
+                print("d- Signer un message de votre choix par RSA")
+                print("e- Vérifier la signature du message (d)")
+                print("f- Revenir au menu principal")
+                while True:
+                     choice = input("Choice : ")
+                     if choice == 'a':
+                            
+                            
+                            def generate_key_pair():
 
-# IPython
-profile_default/
-ipython_config.py
+                                private_key = rsa.generate_private_key(
+                                    public_exponent=65537,
+                                    key_size=2048,
+                                    backend=default_backend()
+                            )
+                                public_key = private_key.public_key()
+                                return private_key, public_key
+                            private_key, public_key = generate_key_pair()
+                            print("clé privé:")
+                            print(private_key)
+                            print("\n clé privé:")
+                            print(public_key)
+                            file2=open(r"C:\python\keys.txt", "a")
+                            file2.write(str(private_key))
+                            file2.write("\n")
+                            file2.write(str(public_key))
+                            file2.write("\n")
+                            file2.close()
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+                            
+                           
+                     if choice == 'b':
+                        message = input("Entrez le message que vous souhaitez chiffrer : ")
+    
+                        # Chiffrement du message avec la clé publique
+                        encrypted_message = public_key.encrypt(
+                            message.encode('utf-8'),
+                            padding.OAEP(
+                             mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                             algorithm=hashes.SHA256(),
+                            label=None
+                          )
+                       )
+    
+                        print("Message chiffré :")
+                        print(encrypted_message)
+                     
+                     if choice == 'c':
+                        decrypted_message = private_key.decrypt(
+                           encrypted_message,
+                           padding.OAEP(
+                              mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                              algorithm=hashes.SHA256(),
+                              label=None
+                          )
+                       )
+    
+                        print("Message déchiffré :")
+                        print(decrypted_message.decode('utf-8'))
+                        
+                     if choice == 'd':
+                        message_to_sign = input("Entrez le message que vous souhaitez signer : ")
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+                        # Signature du message avec la clé privée
+                        signature = private_key.sign(
+                            message_to_sign.encode('utf-8'),
+                            padding.PKCS1v15(),
+                            hashes.SHA256()
+                        )
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
+                        print("Signature générée :")
+                        print(signature)
 
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/#use-with-ide
-.pdm.toml
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
+                     if choice == 'e':
+                        try: 
+                            public_key.verify(
+                                signature,
+                                message_to_sign.encode('utf-8'),
+                                padding.PKCS1v15(),
+                                hashes.SHA256()
+                            )
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+                            print("La signature est valide.")
+                        except Exception:
+                            print("La signature n'est pas valide.")
+                     
+                     
+                     if choice == 'f':
+                        break      
+            elif choice == 'C':
+                print("Certificat (RSA)")
+                print(" a- Générer les paires de clés dans un fichier ")
+                print(" b- Générer un certificat autosigné par RSA")
+                print(" c- Chiffrer un message de votre choix par ce certificat ")
+                print(" d- Revenir au menu principal")
 
-# SageMath parsed files
-*.sage.py
+                while True:
+                  choice = input("Choice : ")
+                  if choice == 'a':
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+                        def generate_key_pair():
+                             private_key = rsa.generate_private_key(
+                                 public_exponent=65537,
+                                 key_size=2048,
+                                 backend=default_backend()
+                            ) 
+                             public_key = private_key.public_key()
+                             return private_key, public_key
 
-# Spyder project settings
-.spyderproject
-.spyproject
+                        private_key, public_key = generate_key_pair()
+                        print("Private Key:")
+                        print(private_key)
+                        print("\nPublic Key:")
+                        print(public_key)
+                        file3=open(r"C:\python\certificat.txt", "a")
+                        file3.write(str(private_key))
+                        file3.write("\n")
+                        file3.write(str(public_key))
+                        file3.write("\n")
+                        file3.close()
+                  if choice=='b':
+                      
 
-# Rope project settings
-.ropeproject
+                      
+                      # Création du certificat autosigné
+                     subject = issuer = x509.Name([
+                         x509.NameAttribute(NameOID.COUNTRY_NAME, "italia"),
+                         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "france"),
+                         x509.NameAttribute(NameOID.LOCALITY_NAME, "monaco"),
+                         x509.NameAttribute(NameOID.ORGANIZATION_NAME, "mon Organization"),
+                         x509.NameAttribute(NameOID.COMMON_NAME, "Mon nom"),
+                      ])
 
-# mkdocs documentation
-/site
+                     cert = x509.CertificateBuilder().subject_name(
+                        subject
+                     ).issuer_name(
+                       issuer
+                     ).public_key(
+                       private_key.public_key()
+                     ).serial_number(
+                       x509.random_serial_number()
+                     ).not_valid_before(
+                       datetime.datetime.utcnow()
+                        
+                     ).not_valid_after(
+                       datetime.datetime.utcnow() + datetime.timedelta(days=365)
+                     ).sign(private_key, hashes.SHA256(), default_backend())
+                         
+                  if choice =='c' :
+                        public_key = cert.public_key()
+                        message = input("Entrez le message que vous souhaitez chiffrer : ")
+        
+                            # Chiffrement du message avec la clé publique
+                        encrypted_message = public_key.encrypt(
+                                message.encode('utf-8'),
+                                padding.OAEP(
+                                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                                 algorithm=hashes.SHA256(),
+                                label=None
+                            )
+                         )
+        
+                        print("Message chiffré :")
+                        print(encrypted_message)
+                
+                  if choice =="d":
+                    break     
+                   
+                 
+                
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
 
-# Pyre type checker
-.pyre/
+            elif choice == 'D':
+                 print("Quitter")
+                 break
 
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+        break
+else:
+    print("introuvable")
+    file1 = open(r"C:\python\enregist.txt", "a")
+    file1.write(log)
+    file1.write("---")
+    file1.write(pwd)
+    file1.write("\n")
+    file1.close()
+    print("votre données est enregisté sur ' file.")
+    
